@@ -27,6 +27,10 @@
 #include <Xw_Window.hxx>
 #endif
 
+#ifdef _WIN32
+#include <WNT_Window.hxx>
+#endif
+
 CadView::CadView(QWidget *parent) : QWidget(parent) {
     setMouseTracking(true);
     setAttribute(Qt::WA_PaintOnScreen, true);
@@ -72,6 +76,12 @@ void CadView::initViewer() {
 
         if (!wind->IsMapped())
             wind->Map();
+#elif defined(_WIN32)
+        Handle(WNT_Window) wind = new WNT_Window((Aspect_Handle)window_id);
+        m_view->SetWindow(wind);
+
+        if (!wind->IsMapped())
+            wind->Map();
 #endif
 
         m_view->SetBackgroundColor(Quantity_NOC_BLACK);
@@ -91,8 +101,13 @@ void CadView::initViewer() {
 }
 
 void CadView::paintEvent(QPaintEvent *) {
-    if (!m_view.IsNull())
-        m_view->Redraw();
+    if (!m_view.IsNull()) {
+        try {
+            m_view->Redraw();
+        } catch (Standard_Failure const &e) {
+            qWarning("Paint error: %s", e.GetMessageString());
+        }
+    }
 }
 
 void CadView::resizeEvent(QResizeEvent *) {
@@ -113,20 +128,30 @@ gp_Pnt CadView::convertClickToPoint(const QPoint &p) {
     Standard_Integer y = p.y();
     Standard_Real X, Y, Z;
 
-    m_view->Convert(x, y, X, Y, Z);
+    try {
+        m_view->Convert(x, y, X, Y, Z);
+    } catch (Standard_Failure const &e) {
+        qWarning("Convert error: %s", e.GetMessageString());
+        return gp_Pnt(0, 0, 0);
+    }
 
     return gp_Pnt(X, Y, Z);
 }
 
 void CadView::mousePressEvent(QMouseEvent *event) {
-    if (event->button() == Qt::MiddleButton && !m_view.IsNull()) {
+    if (m_view.IsNull() || m_context.IsNull()) {
+        qWarning("View or context not initialized");
+        return;
+    }
+
+    if (event->button() == Qt::MiddleButton) {
         m_panning = true;
         m_lastPanPos = event->pos();
         setCursor(Qt::ClosedHandCursor);
         return;
     }
 
-    if (event->button() == Qt::RightButton && !m_view.IsNull()) {
+    if (event->button() == Qt::RightButton) {
         bool shiftPressed = (event->modifiers() & Qt::ShiftModifier);
         if (shiftPressed) {
             m_rotatingRoll = true;
@@ -141,7 +166,7 @@ void CadView::mousePressEvent(QMouseEvent *event) {
         return;
     }
 
-    if (event->button() != Qt::LeftButton || m_view.IsNull())
+    if (event->button() != Qt::LeftButton)
         return;
 
     gp_Pnt p = convertClickToPoint(event->pos());

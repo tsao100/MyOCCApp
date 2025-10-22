@@ -96,4 +96,5 @@ win32 {
 
     DEFINES += _WIN32
     QMAKE_CXXFLAGS += /std:c++17
+    QMAKE_CXXFLAGS += /wd4005
 }

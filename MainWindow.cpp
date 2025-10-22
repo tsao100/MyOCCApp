@@ -13,6 +13,10 @@ MainWindow::MainWindow(QWidget *parent)
     menu->addAction("Line", this, &MainWindow::onDrawLine);
     menu->addAction("Arc", this, &MainWindow::onDrawArc);
     menu->addAction("Cube", this, &MainWindow::onDrawCube);
+
+    QMenu *fileMenu = menuBar()->addMenu("File");
+    fileMenu->addAction("Save...", this, [this]() { view->saveToDirectory(); });
+    fileMenu->addAction("Load...", this, [this]() { view->loadFromDirectory(); });
 }
 
 void MainWindow::onDrawLine() { view->setMode(CadView::Mode::DrawLine); }

@@ -170,7 +170,7 @@ void CadView::drawLine(const gp_Pnt &p1, const gp_Pnt &p2)
     TopoDS_Edge edge = BRepBuilderAPI_MakeEdge(p1, p2);
     Handle(AIS_Shape) shape = new AIS_Shape(edge);
     m_context->Display(shape, Standard_True);
-    m_view->FitAll();
+//    m_view->FitAll();
 }
 
 void CadView::drawArc(const gp_Pnt &p1, const gp_Pnt &p2, const gp_Pnt &p3)
@@ -185,7 +185,7 @@ void CadView::drawArc(const gp_Pnt &p1, const gp_Pnt &p2, const gp_Pnt &p3)
             TopoDS_Edge arc = BRepBuilderAPI_MakeEdge(circle, p1, p3);
             Handle(AIS_Shape) shape = new AIS_Shape(arc);
             m_context->Display(shape, Standard_True);
-            m_view->FitAll();
+//            m_view->FitAll();
         }
     } catch (Standard_Failure const&) {
         qWarning("Failed to create arc - points may be collinear");
@@ -201,5 +201,5 @@ void CadView::drawCube(const gp_Pnt &p)
     TopoDS_Shape box = box_maker.Shape();
     Handle(AIS_Shape) shape = new AIS_Shape(box);
     m_context->Display(shape, Standard_True);
-    m_view->FitAll();
+//    m_view->FitAll();
 }
